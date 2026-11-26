@@ -1,0 +1,36 @@
+/*
+=========================
+Filmora Ribbon By Fox Cat
+=========================
+KFLOAT0 = Swing (0 to 100; 50)
+KFLOAT1 = Frequency (0 to 100; 50)
+=========================
+*/
+
+float width = (float)p_Width;
+float height = (float)p_Height;
+float maxY = fmax(height - 1.0f, 0.0f);
+
+float swing = clamp(kFloat0, 0.0f, 100.0f);
+float frequency = clamp(kFloat1, 0.0f, 100.0f);
+
+// peak vertical shift: 28% of the frame height at Swing 100
+float amplitude = 0.28f * (swing / 100.0f) * height;
+
+// waves across the width: Frequency 100 = 2.5 cycles
+float cycles = frequency / 40.0f;
+
+float normalizedX = (float)x / fmax(width, 1.0f);
+float wave = sin(6.28318530718f * cycles * normalizedX);
+
+float sampleY = (float)y + amplitude * wave;
+
+if (sampleY < 0.0f || sampleY > maxY)
+{
+    kOutput = (float4)(0.0f);
+}
+else
+{
+    kReadIndex = (float2)((float)x, sampleY);
+    kRead();
+}
