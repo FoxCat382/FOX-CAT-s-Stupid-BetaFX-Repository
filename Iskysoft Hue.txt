@@ -1,0 +1,59 @@
+// iSkysoft Hue By Fox Cat
+
+//
+//  kFloat0  Hue   -100 .. 100   default 0
+//
+//  Hue 0 = untouched. Any other value: channels become BGR, then the hue
+//  rotates 1.8 degrees per unit (inverted). 100 and -100 look the same.
+
+float hue = clamp(kFloat0, -100.0f, 100.0f);
+float hueOn = (fabs(hue) > 0.001f) ? 1.0f : 0.0f;
+
+if (hueOn < 0.5f)
+{
+    kReadIndex = (float2)((float)x, (float)y);  kRead();
+}
+else
+{
+    kReadIndex = (float2)((float)x, (float)y);  kRead();  float4 c = kOutput;
+
+    float pr = c.z;
+    float pg = c.y;
+    float pb = c.x;
+
+    float mx = fmax(pr, fmax(pg, pb));
+    float mn = fmin(pr, fmin(pg, pb));
+    float d  = mx - mn;
+
+    float hh = 0.0f;
+    if (d > 0.000001f)
+    {
+        if (mx == pr)
+        {
+            hh = (pg - pb) / d;
+        }
+        else if (mx == pg)
+        {
+            hh = (pb - pr) / d + 2.0f;
+        }
+        else
+        {
+            hh = (pr - pg) / d + 4.0f;
+        }
+    }
+
+    hh = hh + (-hue * 1.8f / 60.0f);
+    hh = hh - 6.0f * floor(hh / 6.0f);
+
+    float sat = (mx > 0.0f) ? (d / mx) : 0.0f;
+
+    float k0 = fmod(5.0f + hh, 6.0f);
+    float k1 = fmod(3.0f + hh, 6.0f);
+    float k2 = fmod(1.0f + hh, 6.0f);
+
+    float outR = mx - mx * sat * clamp(fmin(k0, 4.0f - k0), 0.0f, 1.0f);
+    float outG = mx - mx * sat * clamp(fmin(k1, 4.0f - k1), 0.0f, 1.0f);
+    float outB = mx - mx * sat * clamp(fmin(k2, 4.0f - k2), 0.0f, 1.0f);
+
+    kOutput = (float4)(outR, outG, outB, c.w);
+}
